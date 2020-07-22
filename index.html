@@ -17,33 +17,39 @@
   <body class="overflow-hidden bg-gray-200">
     <div id="app">
       <div class="w-full h-screen flex flex-col items-center justify-center">
-        <div class="mb-3 flex justify-around bg-gray-300 p-3 shadow-md">
+        <!-- GAME ACTIONS -->
+        <div class="mb-3 flex justify-around bg-gray-400 p-1 mt-2 shadow-md">
           <button
             @click="resetGame"
             class="bg-red-500 hover:bg-red-600 text-white font-bold rounded px-3 py-2 shadow-md"
           >
+            <i class="fa fa-undo"></i>
             Reset Game
           </button>
 
           <button
-            @click="resetGame"
             class="bg-blue-500 hover:bg-blue-600 text-white font-bold rounded px-3 py-2 mx-5"
-            title="Let the Robot to Take the turn"
+            title="Let the Robot to take the turn"
           >
             <i class="fa fa-forward"></i>
+            Make move
           </button>
 
           <button
-            @click="resetGame"
+            @click="undoMoves"
             class="bg-blue-500 hover:bg-blue-600 text-white font-bold rounded px-3 py-2"
             title="Undo move"
           >
             <i class="fa fa-undo"></i>
+            Undo
           </button>
         </div>
+        <!-- END GAME ACTIONS -->
 
-        <span class="text-3xl text-gray-700">Turn : {{current}}</span>
+        <!-- TURN -->
+        <span class="text-3xl text-gray-700">Turn: {{current}}</span>
 
+        <!-- SQUARES -->
         <div class="grid gap-2 grid-cols-3 bg-red-700 shadow-lg">
           <div
             v-for="(value,key) in values"
@@ -53,7 +59,9 @@
             {{ value }}
           </div>
         </div>
+        <!-- END SQUARES -->
 
+        <!-- MODAL GAME MODE -->
         <div
           v-if="!isPlaying"
           class="w-full h-full absolute bg-blue-300 bg-opacity-25 flex justify-center items-center"
@@ -61,14 +69,14 @@
           <div class="bg-white border py-4 px-3 rounded shadow-2xl text-center">
             <p class="text-2xl">Select Game mode</p>
             <button
-              @click="setGameMode(true)"
+              @click="setGameMode('vsHuman')"
               class="bg-blue-500 hover:bg-blue-600 px-2 text-white border-blue-600 border-2 shadow-md text-3xl rounded"
               title="Human versus Human"
             >
               <i class="fa fa-user"></i> VS <i class="fa fa-user"></i>
             </button>
             <button
-              @click="setGameMode(false)"
+              @click="setGameMode('vsRobot')"
               class="bg-red-500 hover:bg-red-600 px-2 text-white border-red-600 border-2 shadow-md text-3xl rounded"
               title="Human versus Robot"
             >
@@ -76,20 +84,21 @@
             </button>
           </div>
         </div>
+        <!-- END MODAL GAME MODE -->
 
+        <!-- MODAL WINNER AND RESET -->
         <div
           v-if="gameIsOver"
           class="w-full h-full absolute bg-blue-100 bg-opacity-25 flex justify-center items-center"
         >
           <div class="bg-white border py-4 px-3 rounded shadow-2xl text-center">
             <p class="text-2xl">Game over</p>
-            <p class="text-lg">
+            <p v-if="winner" class="text-lg">
               Winner <br />
               {{winner}}
             </p>
-            <p class="text-lg">
-              Winner <br />
-              {{winner}}
+            <p v-else class="text-lg">
+              It's a Draw
             </p>
             <button
               @click="resetGame"
@@ -99,6 +108,7 @@
             </button>
           </div>
         </div>
+        <!-- MODAL WINNER AND RESET -->
       </div>
     </div>
 
@@ -106,9 +116,10 @@
       var app = new Vue({
         el: "#app",
         data: () => ({
-          isPlaying: false,
+          isPlaying: true,
           gameIsOver: false,
           isVersusHuman: true,
+          current: "X",
           winner: "",
           values: {
             0: "",
@@ -121,7 +132,6 @@
             7: "",
             8: "",
           },
-          current: "X",
           winningLines: [
             [0, 1, 2],
             [3, 4, 5],
@@ -132,19 +142,24 @@
             [0, 4, 8],
             [2, 4, 6],
           ],
+          gameHistory: [],
         }),
         methods: {
-          setGameMode(isVersusHuman) {
-            this.isVersusHuman = isVersusHuman;
+          setGameMode(mode) {
+            this.isVersusHuman = mode === "vsHuman" ? true : false;
             this.isPlaying = true;
             this.gameIsOver = false;
           },
           play(key) {
             if (!this.values[key]) {
+              const lastMove = { ...this.values };
+              this.gameHistory.push(lastMove); //cloning previous values and adding to history
+
               this.values[key] = this.current;
               this.current = this.current === "X" ? "O" : "X";
+
+              this.calculateWinner();
             }
-            this.calculateWinner();
           },
           resetGame() {
             for (key in this.values) {
@@ -153,11 +168,20 @@
             this.current = "X";
             this.isPlaying = false;
             this.gameIsOver = false;
+            this.gameHistory = [];
+          },
+          undoMoves() {
+            const moves = this.gameHistory.length;
+            if (moves > 0) {
+              const prevMove = this.gameHistory.pop();
+              this.values = prevMove;
+              this.current = this.current === "X" ? "O" : "X";
+            }
           },
           calculateWinner() {
-            for (let i = 0; i < 8; i++) {
+            for (line in this.winningLines) {
               const values = this.values;
-              const [square1, square2, square3] = this.winningLines[i];
+              const [square1, square2, square3] = this.winningLines[line];
 
               if (
                 values[square1] &&
@@ -171,6 +195,16 @@
             }
 
             //calculate draw
+            let emptySquares = 0;
+            for (key in this.values) {
+              if (this.values[key] === "") {
+                emptySquares++;
+              }
+            }
+            if (!emptySquares) {
+              this.gameIsOver = true;
+              this.winner = "";
+            }
           },
         },
       });
