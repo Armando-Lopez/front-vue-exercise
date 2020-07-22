@@ -109,6 +109,9 @@
           </div>
         </div>
         <!-- MODAL WINNER AND RESET -->
+        <!-- gameAUDIOS -->
+        <audio id="gameAudios" src=""></audio>
+        <!-- END gameAUDIOS -->
       </div>
     </div>
 
@@ -158,6 +161,8 @@
               this.values[key] = this.current;
               this.current = this.current === "X" ? "O" : "X";
 
+              this.playSound(this.current);
+
               this.calculateWinner();
             }
           },
@@ -190,6 +195,7 @@
               ) {
                 this.gameIsOver = true;
                 this.winner = values[square1];
+                this.playSound("someOneWins");
                 return;
               }
             }
@@ -204,7 +210,41 @@
             if (!emptySquares) {
               this.gameIsOver = true;
               this.winner = "";
+              this.playSound("draw");
             }
+          },
+          playSound(audioID) {
+            const audioElement = document.getElementById("gameAudios");
+            let source;
+
+            switch (audioID) {
+              case "X":
+                source = "https://actions.google.com/sounds/v1/cartoon/pop.ogg";
+                break;
+
+              case "O":
+                source =
+                  "https://actions.google.com/sounds/v1/cartoon/cartoon_cowbell.ogg";
+                break;
+
+              case "someOneWins":
+                source =
+                  "https://actions.google.com/sounds/v1/crowds/battle_crowd_celebrate_stutter.ogg";
+                break;
+
+              case "draw":
+                source =
+                  "https://actions.google.com/sounds/v1/crowds/battle_intimidation_forest.ogg";
+                break;
+
+              default:
+                source = "";
+                break;
+            }
+
+            audioElement.src = source;
+            audioElement.currentTime = 0;
+            audioElement.play();
           },
         },
       });
