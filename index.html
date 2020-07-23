@@ -268,18 +268,19 @@
               .forEach((audio) => audio.pause());
           },
           undoMoves() {
-            if (this.gameHistory.length > 1) {
-              if (this.gameMode === "versusHuman") {
+            const moves = this.gameHistory.length;
+
+            if (moves > 0 && this.gameMode === "versusHuman") {
+              const previousMove = this.gameHistory.pop();
+              this.values = previousMove;
+              this.current = this.current === "X" ? "O" : "X";
+            }
+            if (moves > 1 && this.gameMode === "versusRobot") {
+              // tow times to remove robot move
+              for (let i = 0; i < 2; i++) {
                 const previousMove = this.gameHistory.pop();
                 this.values = previousMove;
                 this.current = this.current === "X" ? "O" : "X";
-              } else {
-                // tow times to remove robot move
-                for (let i = 0; i < 2; i++) {
-                  const previousMove = this.gameHistory.pop();
-                  this.values = previousMove;
-                  this.current = this.current === "X" ? "O" : "X";
-                }
               }
             }
           },
