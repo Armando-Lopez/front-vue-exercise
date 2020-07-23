@@ -14,13 +14,11 @@
     />
   </head>
 
-  <body class="overflow-hidden bg-blue-300">
+  <body class="bg-blue-300">
     <div id="app">
       <div class="w-full h-1/5 relative flex flex-col items-center">
         <!-- GAME ACTIONS -->
-        <div
-          class="mb-3 flex justify-around bg-gray-400 p-1 mt-2 shadow-md rounded-full"
-        >
+        <div class="bg-gray-400 p-1 my-4 shadow-md rounded-full text-1xl">
           <button
             @click="resetGame"
             class="bg-red-500 hover:bg-red-600 text-white font-bold rounded-full px-3 py-2 shadow-md"
@@ -60,12 +58,12 @@
 
         <!-- SQUARES -->
         <div
-          class="w-full max-w-lg grid gap-2 grid-cols-3 bg-red-500 shadow-lg rounded-full"
+          class="w-11/12 lg:w-3/4 grid gap-2 grid-cols-3 bg-red-500 shadow-lg mb-4"
         >
           <div
             v-for="(value,key) in values"
             @click="play(key)"
-            class="bg-gray-100 h-40 flex items-center justify-center text-4xl hover:bg-gray-200 cursor-pointer scale-150"
+            class="bg-gray-100 h-40 flex items-center justify-center text-4xl hover:bg-gray-200 cursor-pointer"
           >
             <i
               v-if="value"
@@ -82,18 +80,20 @@
           v-if="!gameStarted"
           class="w-full h-full absolute bg-blue-300 bg-opacity-25 flex justify-center items-center"
         >
-          <div class="bg-white border py-4 px-3 rounded shadow-2xl text-center">
-            <p class="text-2xl">Select Game mode</p>
+          <div
+            class="bg-white border p-5 rounded shadow-2xl text-center text-5xl"
+          >
+            <p class="text-4xl">Select game mode</p>
             <button
               @click="setGameMode('versusHuman')"
-              class="bg-blue-500 hover:bg-blue-600 px-2 text-white border-blue-600 border-2 shadow-md text-3xl rounded"
+              class="bg-blue-500 hover:bg-blue-600 px-2 text-white border-blue-600 border-2 rounded"
               title="Human versus Human"
             >
               <i class="fa fa-user"></i> VS <i class="fa fa-user"></i>
             </button>
             <button
               @click="setGameMode('versusRobot')"
-              class="bg-red-500 hover:bg-red-600 px-2 text-white border-red-600 border-2 shadow-md text-3xl rounded"
+              class="bg-red-500 hover:bg-red-600 px-2 text-white border-red-600 border-2 rounded"
               title="Human versus Robot"
             >
               <i class="fa fa-user"></i> VS <i class="fa fa-robot"></i>
@@ -108,22 +108,20 @@
           class="w-full h-full absolute bg-blue-100 bg-opacity-25 flex justify-center items-center"
         >
           <div class="bg-white border py-4 px-3 rounded shadow-2xl text-center">
-            <p class="text-2xl">Game over</p>
-            <p v-if="winner" class="text-lg">
+            <p v-if="winner" class="text-4xl">
               Winner <br />
               <i
-                class="fa fa-user text-4xl"
+                class="fa fa-user text-5xl"
                 v-bind:class="[winner === 'X' ? 'text-red-700' : 'text-blue-700']"
               ></i>
             </p>
-            <p v-else class="text-lg">
-              It's a Draw
-            </p>
+            <p v-else class="text-4xl">It's a Draw.</p>
             <button
               @click="resetGame"
-              class="bg-red-500 px-2 text-white border-red-700 border-2 shadow-md text-3xl rounded-full"
+              class="bg-red-500 p-2 mt-4 text-white border-red-700 border-2 shadow-md text-3xl"
             >
               <i class="fa fa-undo"></i>
+              play again
             </button>
           </div>
         </div>
@@ -140,7 +138,22 @@
         <!-- ENDROBOT IS THINKING -->
 
         <!-- AUDIOS -->
-        <audio src=""></audio>
+        <audio
+          id="X"
+          src="https://actions.google.com/sounds/v1/cartoon/pop.ogg"
+        ></audio>
+        <audio
+          id="O"
+          src="https://actions.google.com/sounds/v1/cartoon/cartoon_cowbell.ogg"
+        ></audio>
+        <audio
+          id="someOneWins"
+          src="https://actions.google.com/sounds/v1/crowds/battle_crowd_celebrate_stutter.ogg"
+        ></audio>
+        <audio
+          id="draw"
+          src="https://actions.google.com/sounds/v1/crowds/battle_intimidation_forest.ogg"
+        ></audio>
         <!-- END AUDIOS -->
       </div>
     </div>
@@ -215,6 +228,8 @@
             this.current = "X";
             this.gameStarted = false;
             this.gameIsOver = false;
+            this.robotIsThinking = false;
+            this.winner = "";
             this.gameHistory = [];
             document.querySelector("audio").src = "";
           },
@@ -228,7 +243,7 @@
           },
           makeRobotPlay() {
             this.robotIsThinking = true;
-            const robotThinkingDelay = Math.random() * 4;
+            const robotThinkingDelay = Math.random() * 3;
             let selectedPosition;
             let robotChosedSquare = false;
 
@@ -279,42 +294,13 @@
             }
           },
           playSound(audioID) {
-            const audioElement = document.querySelector("audio");
-            let source;
-
-            switch (audioID) {
-              case "X":
-                source = "https://actions.google.com/sounds/v1/cartoon/pop.ogg";
-                break;
-
-              case "O":
-                source =
-                  "https://actions.google.com/sounds/v1/cartoon/cartoon_cowbell.ogg";
-                break;
-
-              case "someOneWins":
-                source =
-                  "https://actions.google.com/sounds/v1/crowds/battle_crowd_celebrate_stutter.ogg";
-                break;
-
-              case "humanWins":
-                source =
-                  "https://actions.google.com/sounds/v1/crowds/battle_crowd_celebration.ogg";
-                break;
-
-              case "draw":
-                source =
-                  "https://actions.google.com/sounds/v1/crowds/battle_intimidation_forest.ogg";
-                break;
-
-              default:
-                source = "";
-                break;
-            }
-
-            audioElement.src = source;
-            audioElement.currentTime = 0;
-            audioElement.play();
+            // document.querySelectorAll("audio").forEach((audio) => {
+            //   audio.currentTime = 0;
+            // });
+            // const audioElement = document.getElementById(audioID);
+            // audioElement.currentTime = 0;
+            // audioElement.play();
+            // "https://actions.google.com/sounds/v1/crowds/battle_crowd_celebration.ogg";
           },
         },
       });
