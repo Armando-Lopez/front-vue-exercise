@@ -28,20 +28,21 @@
           </button>
 
           <button
+            @click="undoMoves"
             class="bg-blue-500 hover:bg-blue-600 text-white font-bold rounded px-3 py-2 mx-5"
-            title="Let the Robot to take the turn"
+            title="Undo move"
           >
-            <i class="fa fa-forward"></i>
-            Make move
+            <i class="fa fa-reply"></i>
+            Undo
           </button>
 
           <button
-            @click="undoMoves"
+            @click="makeRobotPlay"
             class="bg-blue-500 hover:bg-blue-600 text-white font-bold rounded px-3 py-2"
-            title="Undo move"
+            title="Let the Robot to take the turn"
           >
-            <i class="fa fa-undo"></i>
-            Undo
+            <i class="fa fa-robot"></i>
+            Robot move
           </button>
         </div>
         <!-- END GAME ACTIONS -->
@@ -109,9 +110,9 @@
           </div>
         </div>
         <!-- MODAL WINNER AND RESET -->
-        <!-- gameAUDIOS -->
+        <!-- AUDIOS -->
         <audio id="gameAudios" src=""></audio>
-        <!-- END gameAUDIOS -->
+        <!-- END AUDIOS -->
       </div>
     </div>
 
@@ -155,8 +156,8 @@
           },
           play(key) {
             if (!this.values[key]) {
-              const lastMove = { ...this.values };
-              this.gameHistory.push(lastMove); //cloning previous values and adding to history
+              const lastMove = { ...this.values }; //cloning previous values and adding to history
+              this.gameHistory.push(lastMove);
 
               this.values[key] = this.current;
               this.current = this.current === "X" ? "O" : "X";
@@ -182,6 +183,19 @@
               this.values = prevMove;
               this.current = this.current === "X" ? "O" : "X";
             }
+          },
+          makeRobotPlay() {
+            let selectedPosition;
+            let robotHasPlayed = false;
+
+            do {
+              selectedPosition = Math.round(Math.random() * 8);
+              if (this.values[selectedPosition] === "") {
+                robotHasPlayed = true;
+              }
+            } while (!robotHasPlayed);
+
+            this.play(selectedPosition);
           },
           calculateWinner() {
             for (line in this.winningLines) {
