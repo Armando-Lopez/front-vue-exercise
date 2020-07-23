@@ -2,6 +2,7 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
+    <link rel="icon" href="favicon.ico" />
     <title>Vue Dev Exercise</title>
     <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
     <link
@@ -20,7 +21,7 @@
         <!-- GAME ACTIONS -->
         <div class="bg-gray-400 p-1 my-4 shadow-md rounded-full text-1xl">
           <button
-            @click="resetGame"
+            @click="resetGame()"
             class="bg-red-500 hover:bg-red-600 text-white font-bold rounded-full px-3 py-2 shadow-md"
           >
             <i class="fa fa-undo"></i>
@@ -28,7 +29,7 @@
           </button>
 
           <button
-            @click="undoMoves"
+            @click="undoMoves()"
             class="bg-blue-500 hover:bg-blue-600 text-white font-bold rounded-full px-3 py-2 mx-5"
             title="Undo move"
           >
@@ -37,7 +38,7 @@
           </button>
 
           <button
-            @click="makeRobotPlay"
+            @click="gameMode === 'versusHuman' && makeRobotPlay()"
             class="bg-blue-500 hover:bg-blue-600 text-white font-bold rounded-full px-3 py-2"
             title="Let the Robot to take the turn"
           >
@@ -48,13 +49,19 @@
         <!-- END GAME ACTIONS -->
 
         <!-- TURN -->
-        <span class="text-3xl text-gray-700"
+        <span class="text-4xl text-gray-700"
           >Turn:
           <i
+            v-if="gameMode === 'versusRobot' && current === 'X'"
+            class="fa fa-robot"
+            v-bind:class="current === 'X' ? 'text-red-700' : 'text-blue-700'"
+          ></i>
+          <i
+            v-else
             class="fa fa-user"
             v-bind:class="current === 'X' ? 'text-red-700' : 'text-blue-700'"
-          ></i
-        ></span>
+          ></i>
+        </span>
 
         <!-- SQUARES -->
         <div
@@ -66,10 +73,15 @@
             class="bg-gray-100 h-40 flex items-center justify-center text-4xl hover:bg-gray-200 cursor-pointer"
           >
             <i
-              v-if="value"
+              v-if="value && gameMode === 'versusHuman'"
               class="fa fa-user"
-              v-bind:class="[value === 'X' ? 'text-red-700' : 'text-blue-700']"
+              v-bind:class="value === 'X' ? 'text-red-700' : 'text-blue-700'"
             ></i>
+            <i
+              v-else-if="value === 'X' && gameMode === 'versusRobot'"
+              class="fa fa-robot text-red-700"
+            ></i>
+            <i v-else-if="value" class="fa fa-user text-blue-700"></i>
             <!-- {{ value }} -->
           </div>
         </div>
@@ -111,13 +123,19 @@
             <p v-if="winner" class="text-4xl">
               Winner <br />
               <i
+                v-if="gameMode === 'versusRobot' && winner === 'X'"
+                class="fa fa-robot text-5xl"
+                v-bind:class="[winner === 'X' ? 'text-red-700' : 'text-blue-700']"
+              ></i>
+              <i
+                v-else
                 class="fa fa-user text-5xl"
                 v-bind:class="[winner === 'X' ? 'text-red-700' : 'text-blue-700']"
               ></i>
             </p>
             <p v-else class="text-4xl">It's a Draw.</p>
             <button
-              @click="resetGame"
+              @click="resetGame()"
               class="bg-red-500 p-2 mt-4 text-white border-red-700 border-2 shadow-md text-3xl"
             >
               <i class="fa fa-undo"></i>
@@ -147,12 +165,16 @@
           src="https://actions.google.com/sounds/v1/cartoon/cartoon_cowbell.ogg"
         ></audio>
         <audio
-          id="someOneWins"
-          src="https://actions.google.com/sounds/v1/crowds/battle_crowd_celebrate_stutter.ogg"
+          id="humanWins"
+          src="https://actions.google.com/sounds/v1/crowds/battle_crowd_celebration.ogg"
         ></audio>
         <audio
           id="draw"
           src="https://actions.google.com/sounds/v1/crowds/battle_intimidation_forest.ogg"
+        ></audio>
+        <audio
+          id="robotWins"
+          src="https://actions.google.com/sounds/v1/science_fiction/robot_code.ogg"
         ></audio>
         <!-- END AUDIOS -->
       </div>
@@ -196,8 +218,15 @@
           setGameMode(mode) {
             this.gameMode = mode === "versusHuman" ? mode : mode; // set versus 'human' or versus 'robot'
             this.gameStarted = true;
+
             if (this.gameMode === "versusRobot") {
-              this.makeRobotPlay();
+              const humanGoFirst = Math.round(Math.random()); // 1 or 0 . True or False
+              if (!humanGoFirst) {
+                this.current = "X";
+                this.makeRobotPlay();
+              } else {
+                this.current = "O";
+              }
             }
           },
           play(key) {
@@ -231,11 +260,13 @@
             this.robotIsThinking = false;
             this.winner = "";
             this.gameHistory = [];
-            document.querySelector("audio").src = "";
+            document
+              .querySelectorAll("audio")
+              .forEach((audio) => audio.pause());
           },
           undoMoves() {
             const moves = this.gameHistory.length;
-            if (moves > 0) {
+            if (moves > 0 && this.gameMode === "versusHuman") {
               const prevMove = this.gameHistory.pop();
               this.values = prevMove;
               this.current = this.current === "X" ? "O" : "X";
@@ -244,7 +275,7 @@
           makeRobotPlay() {
             this.robotIsThinking = true;
             const robotThinkingDelay = Math.random() * 3;
-            let selectedPosition;
+            let selectedPosition = 0;
             let robotChosedSquare = false;
 
             do {
@@ -275,7 +306,20 @@
               ) {
                 this.gameIsOver = true;
                 this.winner = values[square1];
-                this.playSound("someOneWins");
+
+                let audioID = "";
+                if (this.gameMode === "versusRobot" && this.winner === "X") {
+                  audioID = "robotWins";
+                } else if (
+                  this.gameMode === "versusRobot" &&
+                  this.winner === "O"
+                ) {
+                  audioID = "humanWins";
+                }
+                if (this.gameMode === "versusHuman") {
+                  audioID = "humanWins";
+                }
+                this.playSound(audioID);
                 return;
               }
             }
@@ -294,13 +338,9 @@
             }
           },
           playSound(audioID) {
-            // document.querySelectorAll("audio").forEach((audio) => {
-            //   audio.currentTime = 0;
-            // });
-            // const audioElement = document.getElementById(audioID);
-            // audioElement.currentTime = 0;
-            // audioElement.play();
-            // "https://actions.google.com/sounds/v1/crowds/battle_crowd_celebration.ogg";
+            const audioElement = document.getElementById(audioID);
+            audioElement.currentTime = 0;
+            audioElement.play();
           },
         },
       });
