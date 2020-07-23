@@ -120,9 +120,11 @@
         <!-- MODAL WINNER AND RESET -->
         <div
           v-if="gameIsOver"
-          class="w-full h-full absolute bg-blue-100 bg-opacity-25 flex justify-center items-center"
+          class="w-full h-full absolute bg-blue-100 bg-opacity-25 flex justify-center"
         >
-          <div class="bg-white border py-4 px-3 rounded shadow-2xl text-center">
+          <div
+            class="bg-white h-48 border py-4 px-3 rounded shadow-2xl text-center"
+          >
             <p v-if="winner" class="text-4xl">
               Winner <br />
               <i
@@ -223,7 +225,8 @@
             this.gameStarted = true;
 
             if (this.gameMode === "versusRobot") {
-              const humanGoFirst = Math.round(Math.random()); // 1 or 0 . True or False
+              const humanGoFirst = false;
+              // const humanGoFirst = Math.round(Math.random()); // 1 or 0 . True or False
               if (!humanGoFirst) {
                 this.current = "X";
                 this.makeRobotPlay();
