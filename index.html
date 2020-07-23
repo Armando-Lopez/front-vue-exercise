@@ -18,10 +18,12 @@
     <div id="app">
       <div class="w-full h-screen flex flex-col items-center justify-center">
         <!-- GAME ACTIONS -->
-        <div class="mb-3 flex justify-around bg-gray-400 p-1 mt-2 shadow-md">
+        <div
+          class="mb-3 flex justify-around bg-gray-400 p-1 mt-2 shadow-md rounded-full"
+        >
           <button
             @click="resetGame"
-            class="bg-red-500 hover:bg-red-600 text-white font-bold rounded px-3 py-2 shadow-md"
+            class="bg-red-500 hover:bg-red-600 text-white font-bold rounded-full px-3 py-2 shadow-md"
           >
             <i class="fa fa-undo"></i>
             Reset Game
@@ -29,7 +31,7 @@
 
           <button
             @click="undoMoves"
-            class="bg-blue-500 hover:bg-blue-600 text-white font-bold rounded px-3 py-2 mx-5"
+            class="bg-blue-500 hover:bg-blue-600 text-white font-bold rounded-full px-3 py-2 mx-5"
             title="Undo move"
           >
             <i class="fa fa-reply"></i>
@@ -38,7 +40,7 @@
 
           <button
             @click="makeRobotPlay"
-            class="bg-blue-500 hover:bg-blue-600 text-white font-bold rounded px-3 py-2"
+            class="bg-blue-500 hover:bg-blue-600 text-white font-bold rounded-full px-3 py-2"
             title="Let the Robot to take the turn"
           >
             <i class="fa fa-robot"></i>
@@ -48,16 +50,27 @@
         <!-- END GAME ACTIONS -->
 
         <!-- TURN -->
-        <span class="text-3xl text-gray-700">Turn: {{current}}</span>
+        <span class="text-3xl text-gray-700"
+          >Turn:
+          <i
+            class="fa fa-user"
+            v-bind:class="[current === 'X' ? 'text-red-700' : 'text-blue-700']"
+          ></i
+        ></span>
 
         <!-- SQUARES -->
-        <div class="grid gap-2 grid-cols-3 bg-red-700 shadow-lg">
+        <div class="grid gap-2 grid-cols-3 bg-red-500 shadow-lg">
           <div
             v-for="(value,key) in values"
             @click="play(key)"
             class="bg-gray-100 w-40 h-40 flex items-center justify-center text-4xl hover:bg-gray-200 cursor-pointer"
           >
-            {{ value }}
+            <i
+              v-if="value"
+              class="fa fa-user"
+              v-bind:class="[value === 'X' ? 'text-red-700' : 'text-blue-700']"
+            ></i>
+            <!-- {{ value }} -->
           </div>
         </div>
         <!-- END SQUARES -->
@@ -70,14 +83,14 @@
           <div class="bg-white border py-4 px-3 rounded shadow-2xl text-center">
             <p class="text-2xl">Select Game mode</p>
             <button
-              @click="setGameMode('vsHuman')"
+              @click="setGameMode('human')"
               class="bg-blue-500 hover:bg-blue-600 px-2 text-white border-blue-600 border-2 shadow-md text-3xl rounded"
               title="Human versus Human"
             >
               <i class="fa fa-user"></i> VS <i class="fa fa-user"></i>
             </button>
             <button
-              @click="setGameMode('vsRobot')"
+              @click="setGameMode('robot')"
               class="bg-red-500 hover:bg-red-600 px-2 text-white border-red-600 border-2 shadow-md text-3xl rounded"
               title="Human versus Robot"
             >
@@ -96,7 +109,10 @@
             <p class="text-2xl">Game over</p>
             <p v-if="winner" class="text-lg">
               Winner <br />
-              {{winner}}
+              <i
+                class="fa fa-user text-4xl"
+                v-bind:class="[winner === 'X' ? 'text-red-700' : 'text-blue-700']"
+              ></i>
             </p>
             <p v-else class="text-lg">
               It's a Draw
@@ -120,11 +136,12 @@
       var app = new Vue({
         el: "#app",
         data: () => ({
-          isPlaying: true,
+          isPlaying: false,
           gameIsOver: false,
-          isVersusHuman: true,
-          current: "X",
+          robotHasPlayed: false,
+          versus: "",
           winner: "",
+          current: "X",
           values: {
             0: "",
             1: "",
@@ -149,10 +166,15 @@
           gameHistory: [],
         }),
         methods: {
-          setGameMode(mode) {
-            this.isVersusHuman = mode === "vsHuman" ? true : false;
+          setGameMode(versusMode) {
+            // set versus 'human' or versus 'robot'
+            this.versus = versusMode === "human" ? versusMode : versusMode;
+
             this.isPlaying = true;
-            this.gameIsOver = false;
+
+            if (this.versus === "robot") {
+              this.makeRobotPlay();
+            }
           },
           play(key) {
             if (!this.values[key]) {
@@ -163,6 +185,12 @@
               this.current = this.current === "X" ? "O" : "X";
 
               this.playSound(this.current);
+
+              if (this.versus === "robot" && !this.robotHasPlayed) {
+                this.makeRobotPlay();
+              } else {
+                this.robotHasPlayed = false;
+              }
 
               this.calculateWinner();
             }
@@ -186,14 +214,18 @@
           },
           makeRobotPlay() {
             let selectedPosition;
-            let robotHasPlayed = false;
+            let robotChosedSquare = false;
 
             do {
               selectedPosition = Math.round(Math.random() * 8);
               if (this.values[selectedPosition] === "") {
-                robotHasPlayed = true;
+                robotChosedSquare = true;
               }
-            } while (!robotHasPlayed);
+            } while (!robotChosedSquare);
+
+            if (this.versus === "robot") {
+              this.robotHasPlayed = true;
+            }
 
             this.play(selectedPosition);
           },
