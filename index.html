@@ -15,11 +15,14 @@
     />
   </head>
 
-  <body class="bg-blue-300">
+  <body
+    class="bg-blue-300 bg-contain"
+    style="background-image: url(bg-img.jpg);"
+  >
     <div id="app">
       <div class="w-full h-1/5 relative flex flex-col items-center">
         <!-- GAME ACTIONS -->
-        <div class="bg-gray-400 p-1 my-4 shadow-md rounded-full text-1xl">
+        <div class="bg-gray-500 p-1 my-4 shadow-md rounded-full text-1xl">
           <button
             @click="resetGame()"
             class="bg-red-500 hover:bg-red-600 text-white font-bold rounded-full px-3 py-2 shadow-md"
@@ -49,7 +52,7 @@
         <!-- END GAME ACTIONS -->
 
         <!-- TURN -->
-        <span class="text-4xl text-gray-700"
+        <span class="text-4xl text-gray-700 bg-gray-500"
           >Turn:
           <i
             v-if="gameMode === 'versusRobot' && current === 'X'"
@@ -65,12 +68,12 @@
 
         <!-- SQUARES -->
         <div
-          class="w-11/12 lg:w-3/4 grid gap-2 grid-cols-3 bg-red-500 shadow-lg mb-4"
+          class="w-11/12 lg:w-3/4 grid gap-2 grid-cols-3 bg-trasparent shadow-lg mb-4"
         >
           <div
             v-for="(value,key) in values"
             @click="play(key)"
-            class="bg-gray-100 h-40 flex items-center justify-center text-4xl hover:bg-gray-200 cursor-pointer"
+            class="bg-white h-40 flex items-center justify-center text-5xl hover:bg-gray-200 cursor-pointer"
           >
             <i
               v-if="value && gameMode === 'versusHuman'"
@@ -265,11 +268,19 @@
               .forEach((audio) => audio.pause());
           },
           undoMoves() {
-            const moves = this.gameHistory.length;
-            if (moves > 0 && this.gameMode === "versusHuman") {
-              const prevMove = this.gameHistory.pop();
-              this.values = prevMove;
-              this.current = this.current === "X" ? "O" : "X";
+            if (this.gameHistory.length > 1) {
+              if (this.gameMode === "versusHuman") {
+                const previousMove = this.gameHistory.pop();
+                this.values = previousMove;
+                this.current = this.current === "X" ? "O" : "X";
+              } else {
+                // tow times to remove robot move
+                for (let i = 0; i < 2; i++) {
+                  const previousMove = this.gameHistory.pop();
+                  this.values = previousMove;
+                  this.current = this.current === "X" ? "O" : "X";
+                }
+              }
             }
           },
           makeRobotPlay() {
